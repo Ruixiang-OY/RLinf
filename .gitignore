@@ -16,3 +16,6 @@ logs/*
 .venv
 uv.lock
 rlinf/envs/maniskill/assets
+
+sbatch_log
+pi0_model

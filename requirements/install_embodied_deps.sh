@@ -22,6 +22,8 @@ apt-get install -y --no-install-recommends \
     libxrender-dev \
     libgomp1
 
+conda install -c conda-forge wget unzip libibverbs-cos7-x86_64 mesa mesalib freeglut glew libegl libgles libglvnd-devel-conda-x86_64 glfw mesa-libgl-devel-cos6-x86_64 mesalib libglib xorg-libsm libxext-conda-x86_64 xorg-libxrender libgomp
+
 python -m mani_skill.utils.download_asset bridge_v2_real2sim -y
 python -m mani_skill.utils.download_asset widowx250s -y
 

@@ -6,6 +6,8 @@ export SRC_FILE="${EMBODIED_PATH}/train_embodied_agent.py"
 
 export MUJOCO_GL="egl"
 export PYOPENGL_PLATFORM="egl"
+# export MUJOCO_GL="osmesa"
+# export PYOPENGL_PLATFORM="osmesa"
 
 # NOTE: set LIBERO_REPO_PATH to the path of the LIBERO repo
 export LIBERO_REPO_PATH="/opt/libero"

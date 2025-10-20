@@ -14,6 +14,9 @@ cluster:
   num_nodes: 1
   component_placement:
     actor,env,rollout: all
+    # env: 0
+    # rollout: 1-2
+    # actor: 3
 
 runner:
   task_type: embodied
@@ -43,8 +46,8 @@ algorithm:
   reward_coef: 1.0
   n_chunk_steps: 48
   n_eval_chunk_steps: 48
-  num_group_envs: 8
-  rollout_epoch: 8
+  num_group_envs: 4
+  rollout_epoch: 4
   reward_type: chunk_level
   logprob_type: chunk_level
   entropy_type: token_level
@@ -100,7 +103,7 @@ rollout:
     queue_size: 0
   mode: "colocate"
   generation_backend: "huggingface"
-  model_dir: "/path/to/model/openpi"
+  model_dir: "/project/peilab/ruixiang/RLinf/pi0_model"
   recompute_logprobs: False
   unnorm_key: libero_10
   enable_offload: False
@@ -113,7 +116,7 @@ actor:
     queue_name: "replay_buffer"
     queue_size: 0
   training_backend: "fsdp"
-  checkpoint_load_path: "/path/to/model/openpi"
+  checkpoint_load_path: "/project/peilab/ruixiang/RLinf/pi0_model"
   checkpoint_save_path: "../results"
   micro_batch_size: 128
   global_batch_size: 2048 # maximun : global batch size = micro batch size * actor num_processes.

@@ -748,6 +748,7 @@ class EmbodiedFSDPActor(FSDPModelManager, Worker):
             self.load_fsdp_param_and_grad(self.device)
             self.load_fsdp_optimizer(self.device)
 
+        breakpoint()
         self.model.train()
         self.optimizer.zero_grad()
         rollout_size = (
