@@ -103,12 +103,8 @@ rollout:
     queue_size: 0
   mode: "colocate"
   generation_backend: "huggingface"
-<<<<<<< HEAD
   model_dir: "/project/peilab/ruixiang/RLinf/pi0_model"
-=======
-  model_dir: "/path/to/model/openpi"
   precision: ${actor.model.precision}
->>>>>>> origin/main
   recompute_logprobs: False
   unnorm_key: libero_10
   enable_offload: False
