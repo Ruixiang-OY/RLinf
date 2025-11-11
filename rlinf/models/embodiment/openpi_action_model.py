@@ -15,7 +15,7 @@
 import random
 from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Literal, Tuple
+from typing import Any, Literal
 
 import jax
 import numpy as np
@@ -45,12 +45,13 @@ class OpenPi0Config(Pi0Config):
     chunk_critic_input: bool = False
     add_value_head: bool = False
     noise_anneal: bool = False
-    noise_params: List = field(
+    noise_params: list = field(
         default_factory=lambda: [0.7, 0.3, 400]
     )  # noise_start, noise_end, noise_anneal_steps
     ignore_last: bool = False
     value_after_vlm: bool = False
     value_vlm_mode: str = "mean_token"  # last_token, mean_token, first_token
+    simulator_type: str = "libero"  # libero, maniskill, robotwin, metaworld
 
 
 class OpenPi0ForRLActionPrediction(PI0Pytorch):
@@ -194,7 +195,7 @@ class OpenPi0ForRLActionPrediction(PI0Pytorch):
         self,
         data: dict[str, torch.Tensor],
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         compute_values = kwargs.get("compute_values", False)
 
         chains = data["chains"]
@@ -249,10 +250,13 @@ class OpenPi0ForRLActionPrediction(PI0Pytorch):
     def input_processor(self, env_processed_obs):
         to_process_obs = {
             "observation/image": env_processed_obs["images"],
-            "observation/wrist_image": env_processed_obs["wrist_images"],
             "observation/state": env_processed_obs["states"],
             "prompt": env_processed_obs["task_descriptions"],
         }
+        if self.config.simulator_type == "libero":
+            to_process_obs["observation/wrist_image"] = env_processed_obs[
+                "wrist_images"
+            ]
         processed_obs = self.input_transform(to_process_obs)
         device = next(self.parameters()).device
         for key, value in processed_obs.items():
@@ -274,7 +278,7 @@ class OpenPi0ForRLActionPrediction(PI0Pytorch):
 
     def predict_action_batch(
         self, env_obs, mode: Literal["train", "eval"] = "train", compute_values=True
-    ) -> Tuple[np.ndarray, Dict[str, Any]]:
+    ) -> tuple[np.ndarray, dict[str, Any]]:
         processed_obs = self.input_processor(env_obs)
         observation = _model.Observation.from_dict(processed_obs)
         outputs = self.sample_actions(
@@ -288,11 +292,12 @@ class OpenPi0ForRLActionPrediction(PI0Pytorch):
             "chains": outputs["chains"],
             "denoise_inds": outputs["denoise_inds"],
             "observation/image": env_obs["images"],
-            "observation/wrist_image": env_obs["wrist_images"],
             "observation/state": env_obs["states"],
             "tokenized_prompt": processed_obs["tokenized_prompt"],
             "tokenized_prompt_mask": processed_obs["tokenized_prompt_mask"],
         }
+        if self.config.simulator_type == "libero":
+            forward_inputs["observation/wrist_image"] = env_obs["wrist_images"]
 
         result = {
             "prev_logprobs": outputs["prev_logprobs"],
@@ -681,8 +686,18 @@ class OpenPi0ForRLActionPrediction(PI0Pytorch):
         else:
             lang_length = 48
             all_length = 816
+        if self.config.simulator_type == "metaworld":
+            camera_num = 1
+        elif self.config.simulator_type == "libero":
+            camera_num = 2
+        else:
+            raise ValueError(f"Invalid simulator type: {self.config.simulator_type}")
         if self.config.value_vlm_mode == "mean_token":
-            prefix_mask = [True] * 512 + [False] * 256 + [True] * lang_length
+            prefix_mask = (
+                [True] * 256 * camera_num
+                + [False] * 256 * (3 - camera_num)
+                + [True] * lang_length
+            )
         elif self.config.value_vlm_mode == "last_token":
             prefix_mask = [False] * (all_length - 1) + [True] * 1
         elif self.config.value_vlm_mode == "first_token":
